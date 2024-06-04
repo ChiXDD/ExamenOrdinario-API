@@ -75,20 +75,21 @@ async function disminuirCantidad(productoId) {
 async function agregarProducto(producto) {
     const conexion = await obtenerConexion();
     try {
-
-        //convertir la imagen a base64 para poder subirla a la base de datos
-        const imagenBase64 = new Buffer.from(imagen).toString('base64');
-        const imagenSubida = "INSERT INTO productos (nombre, cantidad, precio_compra, precio_venta, imagen) VALUES ?";
-        const imagenSubidaValues = [producto.nombre, producto.cantidad, producto.precio_compra, producto.precio_venta, imagenBase64];
-        await conexion.query( imagenSubida, [imagenSubidaValues], async (error, results) => {
-            if (error) {
-                console.error('Error al agregar el producto:', error.message);
-                throw error;
-            }
-            console.log('Producto agregado correctamente');
-        }
-        );
-        console.log('Producto agregado correctamente');
+        const imagenBase64 = producto.imagen;
+        const sql = "INSERT INTO productos (nombre, cantidad, precio_compra, precio_venta, imagen) VALUES ?";
+        const values = [[producto.nombre, producto.cantidad, producto.precio_compra, producto.precio_venta, imagenBase64]];
+        
+        await new Promise((resolve, reject) => {
+            conexion.query(sql, [values], (error, results) => {
+                if (error) {
+                    console.error('Error al agregar el producto:', error.message);
+                    reject(error);
+                } else {
+                    console.log('Producto agregado correctamente');
+                    resolve(results);
+                }
+            });
+        });
     } catch (error) {
         console.error('Error al agregar el producto:', error.message);
         throw error;
@@ -96,6 +97,8 @@ async function agregarProducto(producto) {
         conexion.release();
     }
 }
+
+
 
 module.exports = {
     obtenerTodos,
